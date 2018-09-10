@@ -11,6 +11,11 @@ import * as mobilenet from '@tensorflow-models/mobilenet';
 //   return tf.model({ inputs: model.inputs, outputs: layer.output });
 // }
 
+const renderProbs = (probs) => {
+  return probs.reduce(((acc, cur) => {
+    return `${acc} ${cur.className}: ${cur.probability}           `
+  }), "")
+}
 
 class App extends Component {
 
@@ -19,7 +24,7 @@ class App extends Component {
     this.state = {
       image: null,
       tab: 0,
-      predictions: ''
+      predictions: ""
     }
   };
 
@@ -32,7 +37,8 @@ class App extends Component {
     const {video, image} = this.webcam.getScreenshot();
     const screenshot = tf.fromPixels(video).expandDims(0).toFloat().div(tf.scalar(127)).sub(tf.scalar(1));
     const model = await mobilenet.load()
-    const predictions = tf.tidy(() => model.classify(screenshot));
+    const predictions = await model.classify(screenshot);
+    console.log(predictions)
     this.setState({ image, predictions })
   };
 
@@ -60,7 +66,7 @@ class App extends Component {
           {image ? <img src={image} alt="" /> : null }
         </div>
         <div>
-          {predictions ? predictions : "Nope"}
+          {predictions ? renderProbs(predictions) : "Nope"}
         </div>
       </div>
     );
